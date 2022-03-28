@@ -1,0 +1,1 @@
+# war3-reforged-menu-hw-accel-bug-workaround
