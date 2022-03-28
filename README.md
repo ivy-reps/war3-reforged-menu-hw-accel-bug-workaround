@@ -1,1 +1,1 @@
-# war3-reforged-menu-hw-accel-bug-workaround
+# Workaround of Warcraft III: Reforged menu freezing/hanging
