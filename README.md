@@ -27,22 +27,22 @@ Here are the results of latest check of binary in virustotal. Sadly link to Viru
 7. Please keep in mind that antiviral products presented on VirusTotal works in paranoid mode, which means that they can treat almost any application as threat. From my point of view best approach will be to look on what the most antiviral products are saying, like Kaspersky, DrWeb, Symantec, McAffe.
 8. You can compile that executable by your own anyway, or ask a friend to do that.
 You can freely fork it if you need. I hope I will be ready to mke fixes. To request them, please use Issues tab of repository.
-9. Executable have compiled in Windows 7 environment. I can't say whether that will work in Windows 8 and Windows 10 or not.
 																																						   
 This is my first GitHub repository shown to the peoples and I'm sorry if it is prepared badly. That repositiory contains the source code of that utility.
 Here is the link to executable that I've compiled and placed there on the GitHub:
 **[https://github.com/ivy-reps/war3-reforged-menu-hw-accel-bug-workaround/releases/download/v.0.3-pre-release/Try-to-start-Warcraft-III-with-Hardware-Acceleration.exe](https://github.com/ivy-reps/war3-reforged-menu-hw-accel-bug-workaround/releases/download/v.0.3-pre-release/Try-to-start-Warcraft-III-with-Hardware-Acceleration.exe)**
+Executable have compiled in Windows 7 environment. I can't say whether that will work in Windows 8 and Windows 10 or not.
 
 ## What you can do to start the game normally
 As I've said I've written utility/application in Golang. That utility have no reverse engineering of the game itself and have no anything bad made to Blizzard licence agreement. No hacking. No game process memory interruption/intrusion. It gathers no information. It just starts Warcraft executable and restarts it if no hardware acceration BlizzardBrowser subprocess after few seconds of Warcraft start.
 
-Just put that file in subdirectory *_retail_\x86_64* of the game main directory, and run.
+Just put that file in subdirectory `_retail_\x86_64` of the game main directory, and run.
 That executable should be placed to the game executable folder
 For example the game installed here:
-*Q:\Games\Blizzard Entertainment\Warcraft III*
+`Q:\Games\Blizzard Entertainment\Warcraft III`
 
 Then the file should be placed here:
-*Q:\Games\Blizzard Entertainment\Warcraft III\_retail_\x86_64*
+`Q:\Games\Blizzard Entertainment\Warcraft III\_retail_\x86_64`
 
 Then just open *Try-to-start-Warcraft-III-with-Hardware-Acceleration.exe* and wait until app will be rerunning the game allover again until it will start normally with no freeze.
 
