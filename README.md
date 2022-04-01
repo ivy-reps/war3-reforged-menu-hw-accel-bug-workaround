@@ -22,7 +22,7 @@ I placed my report about such way to run game normally here https://us.forums.bl
 4. Also, I can't give you a guarantee that the system will not hang or will not go to BSOD (blue screen of death) after the game will be restart for so many times in a short period of time. For example from my point of view, nvidia drivers the most instable last years (IMHO). Maybe I will be wrong in this statement.
 5. Please feel free to check my file with your antivirus, be with actual antivirul databases. Also you can use virustotal service. You can search VirusTotal by your own in the google for example.
 Here are the results of latest check of binary in virustotal. Sadly link to VirusTotal aren't allowed here, so I can share only part of the link with you guys:
-*/gui/file-analysis/NWRkOTA0NzAwYjU5YWY4NmQxODY5OGFjNzJkY2YxYjg6MTY0ODc5OTA2OQ==*
+*https://www.virustotal.com/gui/file/7e66e117ef4dab8cb864d277f90616f0f1d71b168c7e3c93fb39a17167bbfffb*
 6. **Blizzard, please feel free to check my code. There is no nothing to hide.**
 7. Please keep in mind that antiviral products presented on VirusTotal works in paranoid mode, which means that they can treat almost any application as threat. From my point of view best approach will be to look on what the most antiviral products are saying, like Kaspersky, DrWeb, Symantec, McAffe.
 8. You can compile that executable by your own anyway, or ask a friend to do that.
