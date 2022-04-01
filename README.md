@@ -5,17 +5,17 @@ So, I just have application written. I've written it on Golang. Just put it on f
 
 Feel free to build it by yourself. I made binaries on my system. Also feel free to test it on VirusTotal.com ( [latest check](https://www.virustotal.com/gui/file/7e66e117ef4dab8cb864d277f90616f0f1d71b168c7e3c93fb39a17167bbfffb?nocache=1) ) or with any other antivirus.
 
-**What I did to understand what prevents the game from starting without fps slowed down**
+## What I did to understand what prevents the game from starting without fps slowed down
 I tried to kill BlizzardBrowser process many times while Warcraft III main process working because I was thinking that the problem in BlizzardBrowser process exactly and I was thinking that if it will be restarted then at some restart BlizzardBrowser process with type=gpu-process which provides hardware accelerated rendereing will not be crashed and executed successfully (If you kill BlizzardBrowser process while Warcraft is working, Warcraft will restart Blizzard Browser)
 It is all was invain.
 
 Then I just applied that practice to Warcraft III executable. I've written application in Golang programming language, which rerun Warcraft allover again, if after BlizzardBrowser subprocess start will be no BlizzardBrowser subprocess which provides gpu rendering. And it is working! Sometimes it needs 6 attempts to restart the game, sometimes it needs 20 attempts of Warcraft to be restarted to make that BlizzardBrowser and Warcraft tondem to work normally.
 Also I'm thinking that the problem is not in BlizzardBrowser process, but exactly in Warcraft executable. I'm thinking so, because you can terminate BlizzardBrowser alloveragain in your task manager and it never will be restarted with hardware acceleration support, but if you restarting Warcraft itself, at some rerun, BlizzardBrowser will be started with Hardware acceleration usage, because BlizzardBrowser subprocess will not crash.
 
-**Blizzard**
+## Message on Blizzard forum
 I placed my report about such way to run game normally here https://us.forums.blizzard.com/en/warcraft3/t/extremely-low-fps-on-menus/19685/176, but that message was removed without an explanation and notification.
 
-**A kind of disclaimer**
+## A kind of disclaimer
 1. **Be ready that while reruns the game window will flash repeatedly. I advise people with epilepsy to open something dark before starting that utility so that the disappearing of the game black window will does not contrast with a white or other bright background behind the game frame.**
 2. There is no guarantee, that the game will work stable at any case, with or without hardware acceleration supported BlizzardBrowser execution.
 3. There is no guarantee that my approach and my app will work in your case.
@@ -33,7 +33,7 @@ This is my first GitHub repository shown to the peoples and I'm sorry if it is p
 Here is the link to executable that I've compiled and placed there on the GitHub:
 **[https://github.com/ivy-reps/war3-reforged-menu-hw-accel-bug-workaround/releases/download/v.0.3-pre-release/Try-to-start-Warcraft-III-with-Hardware-Acceleration.exe](https://github.com/ivy-reps/war3-reforged-menu-hw-accel-bug-workaround/releases/download/v.0.3-pre-release/Try-to-start-Warcraft-III-with-Hardware-Acceleration.exe)**
 
-**What you can do to start the game normally**
+## What you can do to start the game normally
 As I've said I've written utility/application in Golang. That utility have no reverse engineering of the game itself and have no anything bad made to Blizzard licence agreement. No hacking. No game process memory interruption/intrusion. It gathers no information. It just starts Warcraft executable and restarts it if no hardware acceration BlizzardBrowser subprocess after few seconds of Warcraft start.
 
 Just put that file in subdirectory *_retail_\x86_64* of the game main directory, and run.
