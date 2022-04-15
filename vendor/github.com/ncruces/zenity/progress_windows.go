@@ -142,12 +142,12 @@ func (dlg *progressDialog) setup(opts options) error {
 		0x84c80000, // WS_POPUPWINDOW|WS_CLIPSIBLINGS|WS_DLGFRAME
 		0x80000000, // CW_USEDEFAULT
 		0x80000000, // CW_USEDEFAULT
-		481, 133, 0, 0, instance, uintptr(unsafe.Pointer(dlg)))
+		681, 133, 0, 0, instance, uintptr(unsafe.Pointer(dlg)))
 
 	dlg.textCtl, _, _ = createWindowEx.Call(0,
 		strptr("STATIC"), 0,
 		0x5002e080, // WS_CHILD|WS_VISIBLE|WS_GROUP|SS_WORDELLIPSIS|SS_EDITCONTROL|SS_NOPREFIX
-		12, 10, 441, 16, dlg.wnd, 0, instance, 0)
+		12, 10, 641, 16, dlg.wnd, 0, instance, 0)
 
 	var flags uintptr = 0x50000001 // WS_CHILD|WS_VISIBLE|PBS_SMOOTH
 	if opts.maxValue < 0 {
@@ -156,7 +156,7 @@ func (dlg *progressDialog) setup(opts options) error {
 	dlg.progCtl, _, _ = createWindowEx.Call(0,
 		strptr("msctls_progress32"), // PROGRESS_CLASS
 		0, flags,
-		12, 30, 441, 16, dlg.wnd, 0, instance, 0)
+		12, 30, 641, 16, dlg.wnd, 0, instance, 0)
 
 	dlg.okBtn, _, _ = createWindowEx.Call(0,
 		strptr("BUTTON"), strptr(*opts.okLabel),
@@ -213,24 +213,24 @@ func (d *progressDialog) layout(dpi dpi) {
 	sendMessage.Call(d.okBtn, 0x0030 /* WM_SETFONT */, font, 1)
 	sendMessage.Call(d.cancelBtn, 0x0030 /* WM_SETFONT */, font, 1)
 	sendMessage.Call(d.extraBtn, 0x0030 /* WM_SETFONT */, font, 1)
-	setWindowPos.Call(d.wnd, 0, 0, 0, dpi.scale(481), dpi.scale(133), 0x6)                            // SWP_NOZORDER|SWP_NOMOVE
-	setWindowPos.Call(d.textCtl, 0, dpi.scale(12), dpi.scale(10), dpi.scale(441), dpi.scale(16), 0x4) // SWP_NOZORDER
-	setWindowPos.Call(d.progCtl, 0, dpi.scale(12), dpi.scale(30), dpi.scale(441), dpi.scale(16), 0x4) // SWP_NOZORDER
+	setWindowPos.Call(d.wnd, 0, 0, 0, dpi.scale(681), dpi.scale(133), 0x6)                            // SWP_NOZORDER|SWP_NOMOVE
+	setWindowPos.Call(d.textCtl, 0, dpi.scale(12), dpi.scale(10), dpi.scale(641), dpi.scale(16), 0x4) // SWP_NOZORDER
+	setWindowPos.Call(d.progCtl, 0, dpi.scale(12), dpi.scale(30), dpi.scale(641), dpi.scale(16), 0x4) // SWP_NOZORDER
 	if d.extraBtn == 0 {
 		if d.cancelBtn == 0 {
-			setWindowPos.Call(d.okBtn, 0, dpi.scale(178), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4) // SWP_NOZORDER
+			setWindowPos.Call(d.okBtn, 0, dpi.scale(295), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4) // SWP_NOZORDER
 		} else {
-			setWindowPos.Call(d.okBtn, 0, dpi.scale(145), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4)      // SWP_NOZORDER
-			setWindowPos.Call(d.cancelBtn, 0, dpi.scale(228), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4) // SWP_NOZORDER
+			setWindowPos.Call(d.okBtn, 0, dpi.scale(345), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4)      // SWP_NOZORDER
+			setWindowPos.Call(d.cancelBtn, 0, dpi.scale(428), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4) // SWP_NOZORDER
 		}
 	} else {
 		if d.cancelBtn == 0 {
-			setWindowPos.Call(d.okBtn, 0, dpi.scale(145), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4)     // SWP_NOZORDER
-			setWindowPos.Call(d.extraBtn, 0, dpi.scale(228), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4) // SWP_NOZORDER
+			setWindowPos.Call(d.okBtn, 0, dpi.scale(345), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4)     // SWP_NOZORDER
+			setWindowPos.Call(d.extraBtn, 0, dpi.scale(428), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4) // SWP_NOZORDER
 		} else {
-			setWindowPos.Call(d.okBtn, 0, dpi.scale(62), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4)      // SWP_NOZORDER
-			setWindowPos.Call(d.extraBtn, 0, dpi.scale(145), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4)   // SWP_NOZORDER
-			setWindowPos.Call(d.cancelBtn, 0, dpi.scale(228), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4) // SWP_NOZORDER
+			setWindowPos.Call(d.okBtn, 0, dpi.scale(262), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4)      // SWP_NOZORDER
+			setWindowPos.Call(d.extraBtn, 0, dpi.scale(345), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4)   // SWP_NOZORDER
+			setWindowPos.Call(d.cancelBtn, 0, dpi.scale(428), dpi.scale(58), dpi.scale(75), dpi.scale(24), 0x4) // SWP_NOZORDER
 		}
 	}
 }
