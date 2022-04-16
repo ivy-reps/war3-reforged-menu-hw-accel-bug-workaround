@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"os/exec"
 	"strings"
@@ -18,7 +19,9 @@ import (
 const title = "Warcraft III"
 const launcherName = "Retrying to start Warcraft III with HW Acceleration support"
 
-func findProcessByExeNameAndCmdLineSubStr(exeName string, cmdLine string) int32 {
+var startTime = time.Now()
+
+func findProcessByExeNameAndCmdLineSubStr(exeName string, cmdLine string) *process.Process {
 	processes, e := process.Processes()
 	if e != nil {
 
@@ -36,14 +39,14 @@ func findProcessByExeNameAndCmdLineSubStr(exeName string, cmdLine string) int32 
 
 			}
 			if cmdLine == "" {
-				return prcs.Pid
+				return prcs
 			}
 			if strings.Contains(processCmdLine, cmdLine) {
-				return prcs.Pid
+				return prcs
 			}
 		}
 	}
-	return 0
+	return nil
 }
 
 var lastLineWidth int
@@ -60,9 +63,48 @@ func writeLine(strs ...string) {
 
 }
 
+func findProcessPidByExeNameAndCmdLineSubStr(needleName, needleCmd string, prcs *process.Process) int32 {
+	childrens, err := prcs.Children()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, children := range childrens {
+		cmdline, err := children.Cmdline()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		name, err := children.Name()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if name == needleName && strings.Contains(cmdline, needleCmd) {
+			return children.Pid
+		}
+
+		if pid := findProcessPidByExeNameAndCmdLineSubStr(needleName, needleCmd, children); pid > 0 {
+			return pid
+		}
+
+	}
+
+	return 0
+}
+
+var executionAttempts = 1
+
+func killWarcraftIIIAndIncrease(process *process.Process) {
+
+	if err := process.Kill(); err != nil {
+		log.Fatal(err)
+	}
+	executionAttempts++
+
+}
+
 func main() {
-	executionAttempts := 0
-	var warcraftProcessPID int32
+	var warcraftProcess *process.Process
 
 	dlg, err := zenity.Progress(
 		zenity.Title(launcherName),
@@ -78,22 +120,22 @@ func main() {
 	dlg.Value(0)
 
 	dlgDone := dlg.Done()
-	go func() {
-		if _, ok := <-dlgDone; !ok {
-			if !gameIsLoadedSuccessfully {
-				if warcraftProcessPID := findProcessByExeNameAndCmdLineSubStr("Warcraft III.exe", ""); warcraftProcessPID > 0 {
-					prcss, err := process.NewProcess(warcraftProcessPID)
-					if err != nil {
-						log.Fatal(err)
-					}
-					err = prcss.Kill()
-					if err != nil {
-						log.Fatal(err)
-					}
-				}
 
-				os.Exit(0)
+	go func() {
+		if _, ok := <-dlgDone; warcraftProcess != nil && !ok && !gameIsLoadedSuccessfully {
+			isRunning, err := warcraftProcess.IsRunning()
+			if err != nil {
+				log.Fatal(err)
 			}
+
+			if isRunning {
+				err = warcraftProcess.Kill()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+			os.Exit(0)
 		}
 	}()
 
@@ -102,28 +144,36 @@ func main() {
 		time.Sleep(time.Second)
 		var blizzardBrowserPID int32
 
-		warcraftProcessPID = findProcessByExeNameAndCmdLineSubStr("Warcraft III.exe", "")
-		if warcraftProcessPID == 0 {
-			executionAttempts++
+		warcraftProcessIsRunning := false
+		if warcraftProcess == nil {
+			warcraftProcess = findProcessByExeNameAndCmdLineSubStr("Warcraft III.exe", "")
+		}
 
+		if warcraftProcess != nil {
+			isRunning, err := warcraftProcess.IsRunning()
+			if err != nil {
+				log.Fatal(err)
+			}
+			warcraftProcessIsRunning = isRunning
+		}
+
+		if !warcraftProcessIsRunning {
 			if err := dlg.Text(fmt.Sprintf("Attempt %v: Starting Warcraft III...", executionAttempts)); err != nil {
 				log.Fatal(err)
 			}
 			cmd := exec.Command(`Warcraft III.exe`, "-launch", "-windowmode", "windowed")
 			cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x08000000, HideWindow: true}
 			err = cmd.Start()
-			//cmd.Process.Pid
+
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			prcss, err := process.NewProcess(int32(cmd.Process.Pid))
+			warcraftProcess, err = process.NewProcess(int32(cmd.Process.Pid))
 			if err != nil {
 				log.Fatal(err)
 			}
-			//prcss.ForegroundWithContext()
-
-			if isRunning, _ := prcss.IsRunning(); isRunning && prcss.Pid != 0 {
+			if isRunning, _ := warcraftProcess.IsRunning(); isRunning && warcraftProcess.Pid != 0 {
 
 				if err := dlg.Text(fmt.Sprintf("Attempt %v: Warcraft III started hiddenly....", executionAttempts)); err != nil {
 					log.Fatal(err)
@@ -142,21 +192,23 @@ func main() {
 			continue
 		}
 
-		blizzardBrowserPID = findProcessByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "width")
+		blizzardBrowserPID = findProcessPidByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "width", warcraftProcess)
 		if blizzardBrowserPID == 0 {
 			time.Sleep(1 * time.Second)
 			continue
 		}
+
 		err = dlg.Text(fmt.Sprintf("Attempt %v: BlizzardBrowser loaded... Awaiting for Browser renderer subprocess...", executionAttempts))
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		err = dlg.Value(30)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		blizzardRenderPID := findProcessByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "type=ren")
+		blizzardRenderPID := findProcessPidByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "type=ren", warcraftProcess)
 		if blizzardRenderPID == 0 {
 			time.Sleep(1 * time.Second)
 			continue
@@ -172,14 +224,14 @@ func main() {
 		}
 
 		time.Sleep(2 * time.Second)
-		blizzard3DPID := findProcessByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "type=gpu")
+		blizzard3DPID := findProcessPidByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "type=gpu", warcraftProcess)
 		if blizzard3DPID == 0 {
 			err = dlg.Text(fmt.Sprintf("Attempt %v: Browser GPU subprocess was not loaded. Rechecking in 2 seconds...", executionAttempts))
 			if err != nil {
 				log.Fatal(err)
 			}
 			time.Sleep(2 * time.Second)
-			blizzard3DPID2ndAttempt := findProcessByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "type=gpu")
+			blizzard3DPID2ndAttempt := findProcessPidByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "type=gpu", warcraftProcess)
 			if blizzard3DPID2ndAttempt == 0 {
 				err = dlg.Text(fmt.Sprintf("Attempt %v: Browser GPU subprocess was not loaded. Let's repeat it all over again Warcraft III", executionAttempts))
 				if err != nil {
@@ -187,14 +239,7 @@ func main() {
 				}
 				time.Sleep(100 * time.Millisecond)
 
-				blizzardBrowserProcess, err := process.NewProcess(warcraftProcessPID)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				if err = blizzardBrowserProcess.Kill(); err != nil {
-					log.Fatal(err)
-				}
+				killWarcraftIIIAndIncrease(warcraftProcess)
 				continue
 			}
 		}
@@ -208,22 +253,15 @@ func main() {
 		}
 		time.Sleep(2 * time.Second)
 
-		if blizzard3DPID2ndAttempt := findProcessByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "type=gpu"); blizzard3DPID2ndAttempt != 0 {
+		if blizzard3DPID2ndAttempt := findProcessPidByExeNameAndCmdLineSubStr("BlizzardBrowser.exe", "type=gpu", warcraftProcess); blizzard3DPID2ndAttempt != 0 {
 			break
 		}
 
 		if err := dlg.Text(fmt.Sprintf("Attempt %v: Browser GPU subprocess was not loaded. Let's repeat it all over again Warcraft III", executionAttempts)); err != nil {
 			log.Fatal(err)
 		}
+		killWarcraftIIIAndIncrease(warcraftProcess)
 
-		blizzardBrowserProcess, err := process.NewProcess(warcraftProcessPID)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := blizzardBrowserProcess.Kill(); err != nil {
-			log.Fatal(err)
-		}
 		continue
 	}
 
@@ -236,9 +274,13 @@ func main() {
 	}
 
 	gameIsLoadedSuccessfully = true
+	var endTime = time.Now()
+
+	timeSpent := endTime.Sub(startTime)
+	minutesSpent := math.Round(timeSpent.Seconds() / 60)
 	go func() {
 		if err := zenity.Notify(
-			fmt.Sprintf("Game is ready to play in %v attempts! Just give me Go play it! to try to go to windowed fullscreen and to close the app then", executionAttempts),
+			fmt.Sprintf("Game is ready to play in %v attempts and %v minutes! Just give me Go play it! to try to go to windowed fullscreen and to close the app then", executionAttempts, minutesSpent),
 			zenity.Title(launcherName),
 		); err != nil {
 			if err.Error() != "Invalid window handle." {
@@ -267,7 +309,7 @@ func main() {
 
 	defer dlgWhenFinished.Close()
 
-	dlgWhenFinished.Text(fmt.Sprintf("Game is ready to play in %v attempts! Just give me Go play it! to try to go to windowed fullscreen and to close the app then", executionAttempts))
+	dlgWhenFinished.Text(fmt.Sprintf("Game is ready to play in %v attempts and %v minutes! Just give me Go play it! to try to go to windowed fullscreen and to close the app then", executionAttempts, minutesSpent))
 
 	dlgWhenFinished.Complete()
 
@@ -276,33 +318,39 @@ func main() {
 	done := dlgWhenFinished.Done()
 	go func() {
 		if _, ok := <-done; !ok {
-			if err := dlgWhenFinished.Text("Showing and maximizing Warcraft III..."); err != nil {
-				log.Fatal(err)
-			}
-
-			warcraftProcessPID = findProcessByExeNameAndCmdLineSubStr("Warcraft III.exe", "")
-			if warcraftProcessPID == 0 {
-				if err := dlgWhenFinished.Text("Warcraft III has disappeared. Don't know why..."); err != nil {
-					log.Fatal(err)
-				}
-				log.Fatal("Warcraft III has disappeared. Don't know why...")
-			}
-
-			robotgo.MinWindow(warcraftProcessPID)
-			robotgo.MaxWindow(warcraftProcessPID)
-
-			if err := dlgWhenFinished.Text("Switching to Warcraft III and sending alt + enter the window to turn fullcreen windowed mode on..."); err != nil {
-				log.Fatal(err)
-			}
-
-			robotgo.KeyDown("alt")
-			robotgo.KeyDown("enter")
-			robotgo.KeyUp("alt")
-			robotgo.KeyUp("enter")
-
-			os.Exit(0)
+			wg.Done()
 		}
 	}()
 	wg.Wait()
+
+	if err := dlgWhenFinished.Text("Showing and maximizing Warcraft III..."); err != nil && err.Error() != "dialog canceled" {
+		log.Println("Error on Showing and maximizing Warcraft III:", err)
+	}
+
+	running, err := warcraftProcess.IsRunning()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !running {
+		if err := dlgWhenFinished.Text("Warcraft III has disappeared. Don't know why..."); err != nil && err.Error() != "dialog canceled" {
+			log.Println("Error on changing text of dialog: Warcraft III has disappeared. Don't know why:", err)
+		}
+		log.Fatal("Error on finding Warcraft III:" + "Warcraft III has disappeared. Don't know why...")
+	}
+
+	robotgo.MinWindow(warcraftProcess.Pid)
+	robotgo.MaxWindow(warcraftProcess.Pid)
+
+	if err := dlgWhenFinished.Text("Switching to Warcraft III and sending alt + enter the window to turn fullcreen windowed mode on..."); err != nil && err.Error() != "dialog canceled" {
+		log.Println("Error on changing text of dialog: Switching to Warcraft III and ...:", err)
+	}
+
+	robotgo.KeyDown("alt")
+	robotgo.KeyDown("enter")
+	robotgo.KeyUp("alt")
+	robotgo.KeyUp("enter")
+
+	os.Exit(0)
 	os.Exit(0)
 }
